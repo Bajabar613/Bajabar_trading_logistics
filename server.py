@@ -120,15 +120,18 @@ def _send_email(to_addrs: list, subject: str, html_body: str) -> bool:
         with smtplib.SMTP(
             host,
             port,
-            timeout=20
+            timeout=60
         ) as server:
-           server.starttls(context=ctx)
-           server.login(user, pwd)
 
-           server.sendmail(
-             sender,
-             to_addrs,
-             msg.as_string()
+            server.set_debuglevel(1)
+
+            server.starttls(context=ctx)
+
+            server.login(user, pwd)
+            server.sendmail(
+              sender,
+              to_addrs,
+              msg.as_string()
           )
 
         logger.info(f"Email sent successfully to {to_addrs}")
