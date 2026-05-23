@@ -117,13 +117,12 @@ def _send_email(to_addrs: list, subject: str, html_body: str) -> bool:
 
         ctx = ssl.create_default_context()
 
-        with smtplib.SMTP_SSL(
+        with smtplib.SMTP(
             host,
             port,
-            context=ctx,
             timeout=20
         ) as server:
-
+           server.starttls(context=ctx)
            server.login(user, pwd)
 
            server.sendmail(
