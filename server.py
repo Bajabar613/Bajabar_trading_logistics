@@ -95,7 +95,7 @@ def _send_email(to_addrs: list, subject: str, html_body: str) -> bool:
 
     try:
 
-        port = int(os.environ.get("SMTP_PORT", "587"))
+        port = int(os.environ.get("SMTP_PORT", "465"))
 
         user = os.environ.get("SMTP_USER", "")
 
