@@ -85,25 +85,39 @@ class ContactOut(BaseModel):
 
 def _send_email(to_addrs: list, subject: str, html_body: str) -> bool:
 
-    host = os.environ.get("SMTP_HOST")
-
-    logger.info(f"SMTP HOST: {host}")
-
-    if not host:
-        logger.info("SMTP not configured")
-        return False
-
     try:
+
+        # =================================================
+        # ENV VARIABLES
+        # =================================================
+
+        host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
 
         port = int(os.environ.get("SMTP_PORT", "465"))
 
-        user = os.environ.get("SMTP_USER", "")
+        user = os.environ.get("SMTP_USER")
 
-        pwd = os.environ.get("SMTP_PASS", "")
+        pwd = os.environ.get("SMTP_PASS")
 
         sender = os.environ.get("SMTP_FROM", user)
 
-        logger.info(f"Connecting to SMTP: {host}:{port}")
+        logger.info(f"SMTP HOST: {host}")
+        logger.info(f"SMTP PORT: {port}")
+        logger.info(f"SMTP USER: {user}")
+
+        # =================================================
+        # VALIDATION
+        # =================================================
+
+        if not user or not pwd:
+
+            logger.error("SMTP credentials missing")
+
+            return False
+
+        # =================================================
+        # CREATE EMAIL
+        # =================================================
 
         msg = MIMEMultipart("alternative")
 
@@ -113,25 +127,44 @@ def _send_email(to_addrs: list, subject: str, html_body: str) -> bool:
 
         msg["To"] = ", ".join(to_addrs)
 
-        msg.attach(MIMEText(html_body, "html"))
+        msg.attach(
+            MIMEText(html_body, "html")
+        )
+
+        # =================================================
+        # SSL CONTEXT
+        # =================================================
 
         ctx = ssl.create_default_context()
 
+        # =================================================
+        # CONNECT SMTP
+        # =================================================
+
+        logger.info("Connecting to Gmail SMTP...")
+
         with smtplib.SMTP_SSL(
-             host,
-             465,
-             context=ctx,
-             timeout=60
+            host=host,
+            port=port,
+            context=ctx,
+            timeout=30
         ) as server:
 
+            logger.info("Connected successfully")
+
             server.login(user, pwd)
+
+            logger.info("Login successful")
 
             server.sendmail(
                 sender,
                 to_addrs,
                 msg.as_string()
             )
-        logger.info(f"Email sent successfully to {to_addrs}")
+
+            logger.info(
+                f"Email sent successfully to {to_addrs}"
+            )
 
         return True
 
@@ -140,12 +173,14 @@ def _send_email(to_addrs: list, subject: str, html_body: str) -> bool:
         import traceback
 
         logger.error("========== EMAIL ERROR ==========")
+
         logger.error(str(e))
+
         traceback.print_exc()
+
         logger.error("================================")
 
         return False
-
 # =========================================================
 # ROOT ROUTES
 # =========================================================
