@@ -117,19 +117,20 @@ def _send_email(to_addrs: list, subject: str, html_body: str) -> bool:
 
         ctx = ssl.create_default_context()
 
-        with smtplib.SMTP(host, port, timeout=20) as server:
+        with smtplib.SMTP_SSL(
+            host,
+            port,
+            context=ctx,
+            timeout=20
+        ) as server:
 
-            server.ehlo()
+           server.login(user, pwd)
 
-            server.starttls(context=ctx)
-
-            server.login(user, pwd)
-
-            server.sendmail(
-                sender,
-                to_addrs,
-                msg.as_string()
-            )
+           server.sendmail(
+             sender,
+             to_addrs,
+             msg.as_string()
+          )
 
         logger.info(f"Email sent successfully to {to_addrs}")
 
